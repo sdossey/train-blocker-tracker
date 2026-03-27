@@ -17,7 +17,7 @@ from pathlib import Path
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 API_URL         = "https://train.cohub.com/api/status"
-TRAIN_THRESHOLD = 0.5       # train probability above this = "Train detected"
+TRAIN_THRESHOLD = 0.09       # train probability above this = "Train detected"
 CSV_FILE        = "train_history.csv"
 STATE_FILE      = "train_state.json"
 # ──────────────────────────────────────────────────────────────────────────────
