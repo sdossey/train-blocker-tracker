@@ -1,3 +1,4 @@
 timestamp,crossing,event,train_prob,signal,closed,maintenance_mode,raw_json
 2026-03-27T22:29:02Z,Fourth,Blocked,0.968576,0.022015,True,False,"{""fourthStatus"":{""train"":0.96857578,""signal"":0.02201485},""chestnutStatus"":{""train"":0,""signal"":0},""fourthClosed"":true,""chestnutClosed"":false,""maintenanceMode"":false,""maintenanceMessage"":""""}"
 2026-03-27T22:29:02Z,Fourth,Train!,0.968576,0.022015,True,False,"{""fourthStatus"":{""train"":0.96857578,""signal"":0.02201485},""chestnutStatus"":{""train"":0,""signal"":0},""fourthClosed"":true,""chestnutClosed"":false,""maintenanceMode"":false,""maintenanceMessage"":""""}"
+2026-03-27T22:40:45Z,Fourth,Clear,0.0,0.012651,False,False,"{""fourthStatus"":{""train"":2.8e-7,""signal"":0.01265107},""chestnutStatus"":{""train"":0,""signal"":0},""fourthClosed"":false,""chestnutClosed"":false,""maintenanceMode"":false,""maintenanceMessage"":""""}"
