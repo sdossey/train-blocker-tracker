@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Motive — Nashville Crossings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Playfair+Display:wght@400;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --cream:   #f0ebe0;
+      --cream2:  #e8e2d4;
+      --cobalt:  #1a3a8f;
+      --cobalt2: #122b6e;
+      --red:     #c0392b;
+      --green:   #1a6b3a;
+      --ink:     #0f1f5c;
+      --rule:    #1a3a8f;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--cobalt);
+      font-family: 'Courier Prime', monospace;
+      min-height: 100vh;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+
+    header {
+      border-bottom: 4px double var(--rule);
+      padding: 2rem 2.5rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    header::after {
+      content: '★ ★ ★';
+      display: block;
+      font-size: 0.65rem;
+      letter-spacing: 0.5em;
+      color: var(--cobalt);
+      opacity: 0.4;
+      margin-top: 0.5rem;
+    }
+
+    .masthead {
+      font-family: 'Alfa Slab One', serif;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      color: var(--cobalt);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .masthead-sub {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--cobalt);
+      opacity: 0.6;
+      margin-top: 0.6rem;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: 1.5px solid var(--cobalt);
+      padding: 0.2rem 0.6rem;
+      margin-top: 0.75rem;
+      opacity: 0.7;
+    }
+
+    .live-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--cobalt);
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 2rem 2.5rem 4rem;
+      display: grid;
+      gap: 2rem;
+    }
+
+    .section-rule {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-rule span {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cobalt);
+      opacity: 0.5;
+      white-space: nowrap;
+    }
+
+    .section-rule::before,
+    .section-rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--cobalt);
+      opacity: 0.25;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .status-card {
+      border: 2.5px solid var(--cobalt);
+      padding: 2rem;
+      position: relative;
+      background: var(--cream);
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .status-card::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid var(--cobalt);
+      opacity: 0.2;
+      pointer-events: none;
+      transition: border-color 0.3s;
+    }
+
+    .status-card.blocked { background: var(--cream2); border-color: var(--red); }
+    .status-card.blocked::before { border-color: var(--red); opacity: 0.3; }
+
+    .crossing-num {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      margin-bottom: 0.4rem;
+    }
+
+    .crossing-name {
+      font-family: 'Alfa Slab One', serif;
+      font-size: 2.8rem;
+      line-height: 1;
+      color: var(--cobalt);
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .status-stamp {
+      font-family: 'Alfa Slab One', serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .status-stamp.clear   { color: var(--green); }
+    .status-stamp.blocked { color: var(--red); }
+
+    .stamp-ring {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Alfa Slab One', serif;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      transition: color 0.3s;
+    }
+
+    .stamp-ring.clear   { color: var(--green); }
+    .stamp-ring.blocked { color: var(--red); animation: stamp-pulse 1.2s infinite; }
+
+    @keyframes stamp-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .status-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      border-top: 1px solid var(--cobalt);
+      padding-top: 1rem;
+      opacity: 0.6;
+    }
+
+    .meta-item {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .meta-item span {
+      display: block;
+      font-size: 0.78rem;
+      margin-top: 0.15rem;
+      font-weight: 700;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 2px solid var(--cobalt);
+    }
+
+    .stat-card {
+      padding: 1.25rem 1.5rem;
+      border-right: 1px solid var(--cobalt);
+      text-align: center;
+    }
+
+    .stat-card:last-child { border-right: none; }
+
+    .stat-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-value {
+      font-family: 'Alfa Slab One', serif;
+      font-size: 2.4rem;
+      line-height: 1;
+      color: var(--cobalt);
+    }
+
+    .stat-sub {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      opacity: 0.4;
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      border: 2px solid var(--cobalt);
+      padding: 1.5rem;
+    }
+
+    .chart-title {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 1.25rem;
+      text-align: center;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 200px;
+    }
+
+    .log-card {
+      border: 2px solid var(--cobalt);
+      overflow: hidden;
+    }
+
+    .log-header {
+      background: var(--cobalt);
+      color: var(--cream);
+      padding: 0.6rem 1.25rem;
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.72rem;
+    }
+
+    .log-table th {
+      text-align: left;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      border-bottom: 1px solid var(--cobalt);
+      font-weight: 400;
+    }
+
+    .log-table td {
+      padding: 0.55rem 1.25rem;
+      border-bottom: 1px solid rgba(26,58,143,0.12);
+    }
+
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:nth-child(even) td { background: rgba(26,58,143,0.03); }
+
+    .event-badge {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      text-transform: uppercase;
+      border: 1.5px solid currentColor;
+    }
+
+    .event-badge.blocked { color: var(--red); }
+    .event-badge.train   { color: var(--cobalt2); }
+    .event-badge.clear   { color: var(--green); }
+
+    footer {
+      border-top: 4px double var(--rule);
+      padding: 1rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.45;
+    }
+
+    .fade-in { opacity: 0; animation: fadeUp 0.6s forwards; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .fade-in:nth-child(1) { animation-delay: 0.05s; }
+    .fade-in:nth-child(2) { animation-delay: 0.15s; }
+    .fade-in:nth-child(3) { animation-delay: 0.25s; }
+    .fade-in:nth-child(4) { animation-delay: 0.35s; }
+
+    @media (max-width: 680px) {
+      .status-grid { grid-template-columns: 1fr; }
+      .stats-row   { grid-template-columns: 1fr 1fr; }
+      .chart-grid  { grid-template-columns: 1fr; }
+      .stats-row .stat-card:nth-child(2) { border-right: none; }
+      main { padding: 1.5rem 1.25rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="masthead">Local<br>Motive</div>
+  <div class="masthead-sub">Nashville Rail Crossing Monitor</div>
+  <div>
+    <span class="live-badge">
+      <span class="live-dot"></span>
+      Live — updates every 15 min
+    </span>
+  </div>
+</header>
+
+<main>
+
+  <div class="fade-in">
+    <div class="section-rule"><span>Current Status</span></div>
+    <div class="status-grid">
+      <div class="status-card" id="card-fourth">
+        <div class="crossing-num">Crossing No. 01</div>
+        <div class="crossing-name">Fourth St.</div>
+        <div class="status-indicator">
+          <div class="stamp-ring" id="ring-fourth">—</div>
+          <div class="status-stamp" id="text-fourth">—</div>
+        </div>
+        <div class="status-meta">
+          <div class="meta-item">Train Prob<span id="prob-fourth">—</span></div>
+          <div class="meta-item">Signal<span id="signal-fourth">—</span></div>
+        </div>
+      </div>
+
+      <div class="status-card" id="card-chestnut">
+        <div class="crossing-num">Crossing No. 02</div>
+        <div class="crossing-name">Chestnut St.</div>
+        <div class="status-indicator">
+          <div class="stamp-ring" id="ring-chestnut">—</div>
+          <div class="status-stamp" id="text-chestnut">—</div>
+        </div>
+        <div class="status-meta">
+          <div class="meta-item">Train Prob<span id="prob-chestnut">—</span></div>
+          <div class="meta-item">Signal<span id="signal-chestnut">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fade-in">
+    <div class="section-rule"><span>Historical Record</span></div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Blockages</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-sub">all time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Duration</div>
+        <div class="stat-value" id="stat-avg-dur">—</div>
+        <div class="stat-sub">minutes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Busiest Hour</div>
+        <div class="stat-value" id="stat-busiest">—</div>
+        <div class="stat-sub">most events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">This Week</div>
+        <div class="stat-value" id="stat-week">—</div>
+        <div class="stat-sub">blockages</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fade-in">
+    <div class="section-rule"><span>Analysis</span></div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Blockages by Hour of Day</div>
+        <div class="chart-wrap"><canvas id="chart-hourly"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Events by Crossing</div>
+        <div class="chart-wrap"><canvas id="chart-crossing"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fade-in">
+    <div class="log-card">
+      <div class="log-header">Recent Events</div>
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Crossing</th>
+            <th>Event</th>
+            <th>Train Prob</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody id="log-body">
+          <tr><td colspan="5" style="text-align:center;padding:2rem;opacity:0.4;">Loading history...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div>Local Motive — Nashville, TN</div>
+  <div id="last-updated">—</div>
+  <div>Data: train.cohub.com</div>
+</footer>
+
+<script>
+  const API_URL      = 'https://train.cohub.com/api/status';
+  const TRAIN_THRESH = 0.09;
+  const CSV_URL      = 'https://raw.githubusercontent.com/sdossey/train-spotter/main/train_history.csv';
+
+  async function fetchLiveStatus() {
+    try {
+      const res  = await fetch(API_URL);
+      const data = await res.json();
+      updateCrossing('fourth',   data.fourthStatus,   data.fourthClosed);
+      updateCrossing('chestnut', data.chestnutStatus, data.chestnutClosed);
+      document.getElementById('last-updated').textContent =
+        'Updated ' + new Date().toLocaleTimeString();
+    } catch (e) { console.error('Live fetch failed:', e); }
+  }
+
+  function updateCrossing(id, status, closed) {
+    const isBlocked = closed || status.train >= TRAIN_THRESH;
+    const cls = isBlocked ? 'blocked' : 'clear';
+    document.getElementById(`card-${id}`).className  = 'status-card ' + cls;
+    document.getElementById(`ring-${id}`).className  = 'stamp-ring '  + cls;
+    document.getElementById(`text-${id}`).className  = 'status-stamp ' + cls;
+    document.getElementById(`ring-${id}`).textContent = isBlocked ? '✕' : '✓';
+    document.getElementById(`text-${id}`).textContent = isBlocked ? (closed ? 'Blocked' : 'Train!') : 'All Clear';
+    document.getElementById(`prob-${id}`).textContent  = (status.train * 100).toFixed(4) + '%';
+    document.getElementById(`signal-${id}`).textContent = status.signal.toFixed(4);
+  }
+
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',');
+    return lines.slice(1).map(line => {
+      const vals = line.split(',');
+      return Object.fromEntries(headers.map((h, i) => [h.trim(), (vals[i] || '').trim()]));
+    });
+  }
+
+  function calcDurations(rows) {
+    const open = {}, events = [];
+    for (const row of rows) {
+      const key = row.crossing;
+      if (row.event === 'Blocked' || row.event === 'Train!') {
+        if (!open[key]) open[key] = row.timestamp;
+      } else if (row.event === 'Clear' && open[key]) {
+        const mins = Math.round((new Date(row.timestamp) - new Date(open[key])) / 60000);
+        events.push({ crossing: row.crossing, mins, startRow: open[key] });
+        delete open[key];
+      }
+    }
+    return events;
+  }
+
+  let hourlyChart, crossingChart;
+
+  async function fetchHistory() {
+    try {
+      const res  = await fetch(CSV_URL + '?t=' + Date.now());
+      const text = await res.text();
+      const rows = parseCSV(text);
+      if (!rows.length || !rows[0].timestamp) { showNoData(); return; }
+      const blockRows = rows.filter(r => r.event === 'Blocked' || r.event === 'Train!');
+      const durations = calcDurations(rows);
+      renderStats(blockRows, durations);
+      renderHourlyChart(blockRows);
+      renderCrossingChart(blockRows);
+      renderLog(rows, durations);
+    } catch (e) { showNoData(); }
+  }
+
+  function showNoData() {
+    document.getElementById('log-body').innerHTML =
+      `<tr><td colspan="5" style="text-align:center;padding:2rem;opacity:0.4;">No history yet — data will appear after the first train event.</td></tr>`;
+  }
+
+  function formatHour(h) { return `${h % 12 || 12}${h >= 12 ? 'PM' : 'AM'}`; }
+
+  function renderStats(blockRows, durations) {
+    document.getElementById('stat-total').textContent = blockRows.length || '0';
+    if (durations.length) {
+      const avg = durations.reduce((s, d) => s + d.mins, 0) / durations.length;
+      document.getElementById('stat-avg-dur').textContent = avg.toFixed(1);
+    }
+    const hourCounts = Array(24).fill(0);
+    blockRows.forEach(r => hourCounts[new Date(r.timestamp).getHours()]++);
+    if (blockRows.length)
+      document.getElementById('stat-busiest').textContent =
+        formatHour(hourCounts.indexOf(Math.max(...hourCounts)));
+    const weekAgo = Date.now() - 7 * 86400000;
+    document.getElementById('stat-week').textContent =
+      blockRows.filter(r => new Date(r.timestamp) > weekAgo).length;
+  }
+
+  function renderHourlyChart(blockRows) {
+    const counts = Array(24).fill(0);
+    blockRows.forEach(r => counts[new Date(r.timestamp).getHours()]++);
+    const max = Math.max(...counts);
+    const ctx = document.getElementById('chart-hourly').getContext('2d');
+    if (hourlyChart) hourlyChart.destroy();
+    hourlyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Array.from({length: 24}, (_, i) => formatHour(i)),
+        datasets: [{
+          data: counts,
+          backgroundColor: counts.map(c =>
+            c === max && max > 0 ? 'rgba(26,58,143,0.85)' : 'rgba(26,58,143,0.25)'),
+          borderWidth: 0, borderRadius: 1,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#1a3a8f', font: { family: 'Courier Prime', size: 8 }, maxRotation: 45 }, grid: { color: 'rgba(26,58,143,0.08)' } },
+          y: { ticks: { color: '#1a3a8f', font: { family: 'Courier Prime', size: 9 } }, grid: { color: 'rgba(26,58,143,0.08)' }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function renderCrossingChart(blockRows) {
+    const fourth   = blockRows.filter(r => r.crossing === 'Fourth').length;
+    const chestnut = blockRows.filter(r => r.crossing === 'Chestnut').length;
+    const ctx = document.getElementById('chart-crossing').getContext('2d');
+    if (crossingChart) crossingChart.destroy();
+    crossingChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Fourth St.', 'Chestnut St.'],
+        datasets: [{
+          data: [fourth, chestnut],
+          backgroundColor: ['rgba(26,58,143,0.75)', 'rgba(192,57,43,0.65)'],
+          borderColor: ['#1a3a8f', '#c0392b'], borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: '#1a3a8f', font: { family: 'Courier Prime', size: 10 }, padding: 16 } } },
+        cutout: '60%',
+      }
+    });
+  }
+
+  function renderLog(rows, durations) {
+    const durMap = {};
+    durations.forEach(d => { durMap[`${d.crossing}::${d.startRow}`] = d.mins; });
+    const recent = [...rows].reverse()
+      .filter(r => ['Blocked','Train!','Clear'].includes(r.event)).slice(0, 20);
+    if (!recent.length) { showNoData(); return; }
+    document.getElementById('log-body').innerHTML = recent.map(r => {
+      const dt  = new Date(r.timestamp);
+      const ts  = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString();
+      const badgeClass = r.event === 'Clear' ? 'clear' : r.event === 'Blocked' ? 'blocked' : 'train';
+      const dur = durMap[`${r.crossing}::${r.timestamp}`];
+      const durStr = dur !== undefined ? `${dur} min` : r.event === 'Clear' ? '—' : 'ongoing';
+      return `<tr>
+        <td>${ts}</td>
+        <td>${r.crossing} St.</td>
+        <td><span class="event-badge ${badgeClass}">${r.event}</span></td>
+        <td>${(parseFloat(r.train_prob) * 100).toFixed(3)}%</td>
+        <td>${durStr}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  fetchLiveStatus();
+  fetchHistory();
+  setInterval(fetchLiveStatus, 15 * 60000);
+  setInterval(fetchHistory, 5 * 60000);
+</script>
+</body>
+</html>
